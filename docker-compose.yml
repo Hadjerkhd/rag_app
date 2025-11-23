@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Example env vars
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8001
+    depends_on:
+      - chroma
+    networks:
+      - app-network
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    restart: always
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+    networks:
+      - app-network
+
+volumes:
+  chroma-data:
+
+networks:
+  app-network:
+    driver: bridge

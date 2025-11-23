@@ -1,0 +1,10 @@
+sentence-transformers
+langchain
+langchain_openai
+bs4
+langchain_chroma
+langchain_community
+langchain_core
+langchain_text_splitters
+streamlit
+pypdf
