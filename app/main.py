@@ -15,6 +15,12 @@ tags_metadata = [
     {
         "name": "rag",
         "description": "Retrieval augmented generation",
+        
+    },
+    {
+        "name": "data-fetcher",
+        "description": "Fetcher for data from arxiv",
+        
     },
 ]
 
