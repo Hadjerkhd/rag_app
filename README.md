@@ -48,65 +48,6 @@ app/
 - **ArXiv API**: Academic paper fetching
 - **Docker**: Containerization
 
-## API Endpoints
-
-### RAG Endpoints (`/rag`)
-
-#### `POST /answer-question`
-Answer questions based on indexed documents using RAG.
-
-**Request Body:**
-```json
-{
-  "question": "What are the main findings of the paper?"
-}
-```
-
-**Response:**
-```json
-{
-  "answer": "Based on the indexed documents...",
-  "confidence": 0.85,
-  "sources": ["doc1.pdf", "doc2.pdf"]
-}
-```
-
-#### `POST /index-doc`
-Upload and index a document (PDF or TXT) for future querying.
-
-**Request:** Multipart file upload
-**Response:** Number of text chunks indexed
-
-### Data Fetcher Endpoints (`/data-fetcher`)
-
-#### `POST /fetch-arxiv-articles`
-Fetch academic papers from arXiv and automatically index them.
-
-**Request Body:**
-```json
-{
-  "query": "machine learning transformers",
-  "max_results": 10,
-  "sort_criterion": "relevance"
-}
-```
-
-**Response:**
-```json
-{
-  "fetched_articles": [
-    {
-      "title": "Paper Title",
-      "summary": "Abstract...",
-      "pdf_url": "https://arxiv.org/pdf/...",
-      "published": "2024-01-01",
-      "llm_summary": "AI-generated summary..."
-    }
-  ],
-  "total_count": 10
-}
-```
-
 ## Prerequisites
 
 - Python 3.10+
@@ -147,7 +88,6 @@ uv sync
 
 2. Set up environment variables in `.env`:
 ```env
-OPENAI_API_BASE=https://lab.iaparc.chapsvision.com/llm-gateway/
 OPENAI_MODEL=Mistral-Small
 OPENAI_API_KEY=your-api-key
 CHROMA_DB_HOST=localhost
@@ -186,43 +126,6 @@ Key configuration options in `app/config.py`:
 - **Vector Store**: ChromaDB host and port
 - **Authentication**: Token-based authentication
 
-## Usage Examples
-
-### 1. Index a Research Paper
-
-```bash
-curl -X POST "http://localhost:8000/index-doc" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@research_paper.pdf"
-```
-
-### 2. Ask Questions About Indexed Documents
-
-```bash
-curl -X POST "http://localhost:8000/answer-question" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What methodology was used in the experiments?"}'
-```
-
-### 3. Fetch ArXiv Papers
-
-```bash
-curl -X POST "http://localhost:8000/fetch-arxiv-articles" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "attention mechanisms neural networks",
-    "max_results": 5,
-    "sort_criterion": "submittedDate"
-  }'
-```
-
-## API Documentation
-
-Once the server is running, visit:
-- Interactive API docs: `http://localhost:8000/docs`
-- OpenAPI JSON: `http://localhost:8000/openapi.json`
 
 ## Development
 
@@ -250,47 +153,6 @@ The API uses token-based authentication. Include the token in requests:
 # Header format
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
-
-## Error Handling
-
-The API returns standard HTTP status codes:
-- `200`: Success
-- `400`: Bad Request (invalid input)
-- `401`: Unauthorized (missing/invalid token)
-- `500`: Internal Server Error
-
-## Performance Considerations
-
-- **Vector Search**: ChromaDB provides efficient similarity search
-- **Caching**: Consider implementing Redis for frequently accessed data
-- **Async Operations**: Core functions use async/await for better performance
-- **Database Indexing**: Ensure proper indexing on frequently queried fields
-
-## Monitoring and Logging
-
-- Application logs are written to stdout/stderr
-- Database operations include error handling
-- API responses include appropriate status codes and error messages
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For questions, issues, or contributions, please:
-1. Check existing issues on GitHub
-2. Create a new issue with detailed information
-3. Provide reproduction steps for bugs
-4. Include relevant logs and error messages
 
 ## Roadmap
 
