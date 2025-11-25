@@ -10,7 +10,14 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "Mistral-Small"
     OPENAI_API_KEY: SecretStr = SecretStr("willNotWork")
 
-    DB_HOST: str = "chroma"
-    DB_PORT: int = 8001
+    CHROMA_DB_HOST: str = "chroma"
+    CHROMA_DB_PORT: int = 8001
+    
+    
+    PG_DB_HOST: str = "postgres_db"
+    PG_DB_PORT: int = 5433
+    PG_DB_NAME: str = "researcher_assistantdb"
+    PG_DB_USER_NAME: str = "appuser"
+    PG_password: str  = "apppassword"
     
 settings = Settings()

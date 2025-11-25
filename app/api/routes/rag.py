@@ -3,7 +3,7 @@ import asyncio
 from pathlib import Path
 from fastapi import APIRouter
 from fastapi import UploadFile
-from app.models.rag import AnswerToQuestion, QuestionForDocs, _parse_final_answer
+from app.schemas.rag import AnswerToQuestion, QuestionForDocs, _parse_final_answer
 from app.api.deps import TokenDep
 from app.core.rag import retreive_context, index_document
 from app.config import settings
@@ -21,7 +21,7 @@ router = APIRouter()
 embedder = SentenceTransformerEmbeddings(
         model_name="all-MiniLM-L6-v2"
         )
-vector_store = Chroma(host=settings.DB_HOST, port=settings.DB_PORT,
+vector_store = Chroma(host=settings.CHROMA_DB_HOST, port=settings.CHROMA_DB_PORT,
     collection_name="demo",
     embedding_function=embedder,
 )

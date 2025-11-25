@@ -13,8 +13,13 @@ services:
       # Example env vars
       CHROMA_HOST: chroma
       CHROMA_PORT: 8001
+      PG_DB_USER_NAME: "appuser"
+      PG_password: "apppassword"
+      PG_DB_NAME: "researcher_assistantdb"
+      PG_DB_PORT: 5433
     depends_on:
       - chroma
+      - postgres_db
     networks:
       - app-network
 
@@ -29,10 +34,25 @@ services:
     environment:
       IS_PERSISTENT: "TRUE"
     networks:
+      - app-network  
+  postgres_db:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+      POSTGRES_DB: researcher_assistantdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    networks:
       - app-network
 
 volumes:
   chroma-data:
+  postgres_data:
 
 networks:
   app-network:

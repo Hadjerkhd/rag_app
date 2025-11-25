@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 import arxiv
-from app.models.data_fetcher import Article, FetchArxivArticleResponse
+from app.schemas.data_fetcher import Article, FetchArxivArticleResponse
 
 async def fetch_articles_by_query(query:str="LLM",max_results:int=10,sort_criterion: arxiv.SortCriterion = arxiv.SortCriterion.SubmittedDate ) -> FetchArxivArticleResponse:
   """search for articles in arxiv
@@ -13,7 +13,7 @@ async def fetch_articles_by_query(query:str="LLM",max_results:int=10,sort_criter
   search = arxiv.Search(
     query = query,
     max_results = max_results,
-    sort_by = sort_criterion
+    sort_by =  arxiv.SortCriterion.SubmittedDate 
   )
 
   for r in client.results(search):

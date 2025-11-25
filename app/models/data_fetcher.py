@@ -1,21 +1,15 @@
-from pydantic import BaseModel
-from typing import List, Literal
-from datetime import datetime
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
+from app.utils.db import Base
 
-class Article(BaseModel):
-    """article class
-    """
-    title: str
-    summary: str
-    pdf_url: str
-    published: datetime
-    llm_summary: str| None= None
+class Article(Base):
+    __tablename__ = "Article"
 
-class FetchArxivArticleResponse(BaseModel):
-    fetched_articles: List[Article]
-    
-class FetchArxivArticleRequest(BaseModel):
-    query: str
-    max_results: int =10
-    sort_criterion: Literal["SubmittedDate", "LastUpdatedDate", "Relevance"] = "SubmittedDate"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    summary = Column(String, nullable=False)
+    llm_summary = Column(String, nullable=True)
+    pdf_url = Column(String)
+    published = Column(DateTime, default=False)
