@@ -154,14 +154,3 @@ The API uses token-based authentication. Include the token in requests:
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
-## Roadmap
-
-- [ ] Support for more document formats (DOCX, HTML, etc.)
-- [ ] Enhanced search with filtering and faceting
-- [ ] Batch processing for multiple documents
-- [ ] Citation tracking and reference extraction
-- [ ] Integration with more academic databases
-- [ ] Advanced analytics and usage metrics
-- [ ] Multi-language support
-
-
