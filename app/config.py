@@ -6,16 +6,16 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "RAG"
 
-    OPENAI_API_BASE: str = "https://lab.iaparc.chapsvision.com/llm-gateway/"
-    OPENAI_MODEL: str = "Mistral-Small"
+    OPENAI_API_BASE: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4.1-nano-2025-04-14"
     OPENAI_API_KEY: SecretStr = SecretStr("willNotWork")
 
     CHROMA_DB_HOST: str = "chroma"
-    CHROMA_DB_PORT: int = 8001
+    CHROMA_DB_PORT: int = 8000
     
     
     PG_DB_HOST: str = "postgres_db"
-    PG_DB_PORT: int = 5433
+    PG_DB_PORT: int = 5432
     PG_DB_NAME: str = "researcher_assistantdb"
     PG_DB_USER_NAME: str = "appuser"
     PG_password: str  = "apppassword"

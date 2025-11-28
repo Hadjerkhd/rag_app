@@ -1,40 +1,22 @@
 version: "3.9"
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fastapi_app
-    restart: always
-    ports:
-      - "8000:8000"
-    environment:
-      # Example env vars
-      CHROMA_HOST: chroma
-      CHROMA_PORT: 8001
-      PG_DB_USER_NAME: "appuser"
-      PG_password: "apppassword"
-      PG_DB_NAME: "researcher_assistantdb"
-      PG_DB_PORT: 5433
-    depends_on:
-      - chroma
-      - postgres_db
-    networks:
-      - app-network
 
   chroma:
     image: chromadb/chroma:latest
     container_name: chromadb
     restart: always
     ports:
-      - "8001:8000"
+      - "8001:8000"  # host:container
     volumes:
       - chroma-data:/chroma/chroma
     environment:
       IS_PERSISTENT: "TRUE"
+      CHROMA_SERVER_HOST: "0.0.0.0"
+      CHROMA_SERVER_HTTP_PORT: "8000"
     networks:
       - app-network  
+
   postgres_db:
     image: postgres:16
     restart: always
@@ -48,6 +30,34 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
     networks:
+      - app-network  
+
+  api:
+    build:
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      CHROMA_HOST: "chroma"       # must match service name
+      CHROMA_PORT: "8000"
+      PG_DB_HOST: "postgres_db"
+      PG_DB_USER_NAME: "appuser"
+      PG_password: "apppassword"
+      PG_DB_NAME: "researcher_assistantdb"
+      PG_DB_PORT: "5432"
+    depends_on:
+      - chroma
+      - postgres_db
+    networks:
+      - app-network
+  ui:
+    build:
+      context: ./ui
+    ports:
+      - "8501:8501"
+    networks:
       - app-network
 
 volumes:
@@ -56,4 +66,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge
+ 

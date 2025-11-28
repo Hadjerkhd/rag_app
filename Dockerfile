@@ -1,30 +1,21 @@
-FROM python:3.12
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-ENV PYTHONUNBUFFERED=1
+WORKDIR /app
 
-WORKDIR /app/
+# Copy everything needed
+COPY pyproject.toml uv.lock ./
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /bin/
+# Verify files are there
+RUN ls -la && cat pyproject.toml
+
+# Install
+RUN uv sync --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV PYTHONPATH=/app
-
-# Pre-install dependencies (cached)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/app/.venv \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    uv sync --frozen --no-install-project
-
-# Copy source
+# Copy rest
 COPY . /app/
-
-# Install the project itself (uses cached venv)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/app/.venv \
-    uv sync --frozen
 
 CMD ["fastapi", "run", "--workers", "1", "app/main.py"]

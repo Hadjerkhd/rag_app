@@ -9,7 +9,7 @@ dependencies = [
     "arxiv>=2.3.1",
     "bs4>=0.0.2",
     "docx>=0.2.4",
-    "fastapi>=0.121.3",
+    "fastapi[standard]>=0.121.3",
     "fastapi-offline>=1.7.5",
     "langchain>=0.3.27",
     "langchain-chroma>=0.2.5",
@@ -27,6 +27,7 @@ dependencies = [
     "sqlalchemy>=2.0.42",
     "streamlit>=1.47.1",
     "uvicorn>=0.35.0",
+    "loguru>=0.7.3",
 ]
 
 [dependency-groups]

@@ -1,5 +1,6 @@
 import os
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi_offline import FastAPIOffline
 
@@ -25,7 +26,6 @@ tags_metadata = [
 ]
 
 
-# allow IAParc to configure root_path
 ROOT_URL = os.getenv(key="ROOT_URL", default="")
 
 
@@ -43,3 +43,12 @@ app = FastAPIOffline(
 )
 
 app.include_router(api_router)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://ui"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

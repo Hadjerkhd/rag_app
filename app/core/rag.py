@@ -1,3 +1,4 @@
+from loguru import logger
 from typing import List, Tuple
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -7,6 +8,7 @@ from langchain_core.documents.base import Document
 
 
 async def retreive_context(question: str, vector_store: Chroma, top_k: int=5) -> Tuple[str, List[Document]]:
+    logger.debug(f"Looking for similar context to the question {question}")
     results = vector_store.similarity_search(
     question,
     k=top_k)
