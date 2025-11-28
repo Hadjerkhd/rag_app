@@ -5,7 +5,7 @@ import requests
 
 API_URL = "http://fastapi_app:8000"
 FETCH_ARTICLES_URL = "/fetch-arxiv-articles"
-
+GET_DB_ARTICLES_URL = "/get-db-arxiv-articles"
 
 def fetch_articles(keyword, max_articles):
     # Call the data_fetcher route to fetch articles from arXiv
@@ -20,8 +20,19 @@ def fetch_articles(keyword, max_articles):
     else:
         st.error("Failed to fetch articles")
         return []
-
-
+    
+def get_db_articles():
+    
+    response = requests.get(
+        url=f"{API_URL}{GET_DB_ARTICLES_URL}",
+        headers={"Content-Type": "application/json"},
+    )
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error("Failed to get db articles")
+        return []
+    
 def main():
     st.title("ArXiv Article Fetcher")
 
@@ -37,6 +48,8 @@ def main():
         if articles:
             # Display articles in a table
             st.table(articles)
+    st.title('DB articles')
+    st.table(get_db_articles())
 
 
 if __name__ == "__main__":
