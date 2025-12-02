@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Data files
+*.csv
+*.parquet
+*.json
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.db
+*.sqlite
+
+# Models and large files
+models/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+
+# Logs and artifacts
+logs/
+*.log
+mlruns/
+.phoenix/
+artifacts/
+
+# Development
+.git/
+.gitignore
+.vscode/
+.idea/
+*.ipynb
+.jupyter/
+.ipynb_checkpoints/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+docs/
+*.md
+README*
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large datasets (adjust to your needs)
+data/
+datasets/
+*.zip
+*.tar.gz
+*.tar
