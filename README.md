@@ -1,168 +1,108 @@
-# Research Assistant API
+# Research Assistant RAG Application 🚀
 
-![Research Assistant API Architecture](image.png)
+A full-stack Retrieval-Augmented Generation (RAG) platform designed for academic research. This system enables researchers to fetch papers from ArXiv, store them in a hybrid database (PostgreSQL + ChromaDB), and interact with them through an AI-powered interface.
 
-## Overview
+![Architecture](image.png)
 
-The Research Assistant API is a powerful FastAPI-based service that provides Retrieval Augmented Generation (RAG) capabilities for academic research. It combines document indexing, vector search, and AI-powered question answering to help researchers efficiently explore and analyze scientific literature, particularly from arXiv.
+## 🌟 Key Features
 
-### Key Features
+- **Automated Research**: Fetch and index academic papers directly from ArXiv.
+- **Hybrid Storage**: Relational metadata in PostgreSQL paired with vector embeddings in ChromaDB.
+- **Advanced RAG**: Semantic search and LLM-powered answering using LangChain.
+- **Observability**: Integrated with Arize Phoenix for tracing and evaluation.
+- **User Interface**: Intuitive Streamlit dashboard for research exploration.
+- **Microservices Architecture**: Separate containers for API, UI, Vector Store, and Database.
 
-- **Document Processing**: Upload and index PDF and text documents
-- **Vector Search**: Semantic search using sentence transformers and ChromaDB
-- **AI-Powered Q&A**: Ask questions about your indexed documents using LLM integration
-- **ArXiv Integration**: Fetch and index academic papers directly from arXiv
-- **PostgreSQL Storage**: Persistent storage for articles and metadata
-- **RESTful API**: Clean, documented API endpoints with authentication
+## 🏗️ Architecture
 
-## Architecture
+The application follows a modular architecture designed for scalability:
 
-The application follows a modular architecture:
+1.  **FastAPI Backend**: Provides RESTful endpoints for RAG operations, knowledge graph queries, and data fetching.
+2.  **Streamlit Frontend**: A responsive web interface for easy interaction with the research engine.
+3.  **Data Persistence**: 
+    - **PostgreSQL**: Stores structured metadata about articles and authors.
+    - **ChromaDB**: Manages high-dimensional vector embeddings for semantic retrieval.
+4.  **Observability Stack**: Uses OpenTelemetry and Arize Phoenix to trace LLM interactions and monitor system performance.
 
-```
-app/
-├── main.py              # FastAPI application entry point
-├── config.py            # Configuration settings
-├── api/
-│   ├── main.py         # API router setup
-│   ├── deps.py         # Dependencies (auth, etc.)
-│   └── routes/
-│       ├── rag.py      # RAG endpoints
-│       └── data_fetcher.py  # ArXiv fetching endpoints
-├── core/
-│   ├── rag.py          # RAG core functionality
-│   └── data_fetcher.py # ArXiv fetching logic
-├── schemas/            # Pydantic models
-├── utils/              # Database utilities and CRUD operations
-└── prompts/            # LLM prompt templates
-```
+## 📁 Repository Structure
 
-## Technology Stack
+The project is organized into clear functional domains to ensure it remains easy to maintain as it grows.
 
-- **FastAPI**: Modern, fast web framework for building APIs
-- **LangChain**: Framework for developing applications with LLMs
-- **ChromaDB**: Vector database for embeddings
-- **PostgreSQL**: Relational database for metadata storage
-- **Sentence Transformers**: Text embedding models
-- **OpenAI/Mistral**: Large Language Models for generation
-- **ArXiv API**: Academic paper fetching
-- **Docker**: Containerization
-
-## Prerequisites
-
-- Python 3.10+
-- Docker and Docker Compose
-- PostgreSQL
-- ChromaDB
-- OpenAI/Mistral API access
-
-## Installation
-
-### Using Docker (Recommended)
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd research-assistant-api
+```text
+.
+├── app/                  # Backend Service (FastAPI)
+│   ├── api/routes/       # API endpoints and entry points
+│   ├── core/             # Core business logic (RAG, KG, DB services)
+│   ├── models/           # Pydantic data models for domain entities
+│   ├── schemas/          # API request/response validation schemas
+│   ├── prompts/          # LLM prompt templates and engineering
+│   ├── utils/            # Helper functions and database drivers
+│   └── main.py           # Application bootstrap
+├── ui/                   # Frontend Service (Streamlit)
+│   ├── ui.py             # Frontend application logic
+│   └── Dockerfile        # Container configuration for the UI
+├── init/                 # Database initialization and migration scripts
+├── docker-compose.yml    # Service orchestration and environment setup
+└── pyproject.toml        # Unified dependency management using UV
 ```
 
-2. Create environment file:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
+## 🚀 Getting Started
 
-3. Build and run with Docker:
-```bash
-docker build -t research-assistant-api .
-docker run -p 8000:8000 research-assistant-api
-```
+### Prerequisites
+
+- [Docker & Docker Compose](https://docs.docker.com/get-docker/)
+- An API Key for your preferred LLM provider (OpenAI, Mistral, etc.)
+
+### Quick Start (Recommended)
+
+Run the entire stack with a single command:
+
+1. **Clone the repository**
+2. **Setup Environment**: Create a `.env` file in the root directory.
+3. **Launch**:
+   ```bash
+   docker-compose up --build
+   ```
+4. **Access**:
+   - **Frontend UI**: `http://localhost:8501`
+   - **Backend API Docs**: `http://localhost:8000/docs`
+   - **Observability Hub**: `http://localhost:6006`
 
 ### Local Development
 
-1. Install dependencies using uv:
-```bash
-pip install uv
-uv sync
-```
+For active development, you can run services outside of Docker:
 
-2. Set up environment variables in `.env`:
-```env
-OPENAI_MODEL=Mistral-Small
-OPENAI_API_KEY=your-api-key
-CHROMA_DB_HOST=localhost
-CHROMA_DB_PORT=8001
-PG_DB_HOST=localhost
-PG_DB_PORT=5433
-PG_DB_NAME=researcher_assistantdb
-PG_DB_USER_NAME=appuser
-PG_password=apppassword
-```
+1. **Install dependencies**:
+   ```bash
+   pip install uv
+   uv sync
+   ```
+2. **Start Backend**:
+   ```bash
+   uv run fastapi dev app/main.py
+   ```
+3. **Start Frontend**:
+   ```bash
+   streamlit run ui/ui.py
+   ```
 
-3. Start the development server:
-```bash
-make run-fastapi-dev
-# or
-uv run fastapi dev app/main.py
-```
+## 🔐 Configuration
 
-## Database Setup
+Configuration is managed via environment variables. Key settings include:
 
-The application uses PostgreSQL for storing article metadata. Initialize the database:
+- `OPENAI_API_KEY`: Your LLM provider key.
+- `DATABASE_URL`: Connection string for PostgreSQL.
+- `CHROMA_HOST` / `CHROMA_PORT`: Connection details for the vector store.
 
-```sql
--- Run the initialization script
-psql -f init/init.sql
-```
+See `app/config.py` for a full list of available settings.
 
-The application will automatically create necessary tables on startup.
+---
 
-## Configuration
+## 📜 Roadmap & Progress
 
-Key configuration options in `app/config.py`:
-
-- **LLM Settings**: API base URL, model name, API key
-- **Database**: PostgreSQL connection settings
-- **Vector Store**: ChromaDB host and port
-- **Authentication**: Token-based authentication
-
-
-## Development
-
-### Project Structure
-
-- **Core Logic**: Business logic in `app/core/`
-- **API Routes**: HTTP endpoints in `app/api/routes/`
-- **Data Models**: Pydantic schemas in `app/schemas/`
-- **Database**: SQLAlchemy models and CRUD in `app/utils/`
-- **Configuration**: Environment-based config in `app/config.py`
-
-### Adding New Features
-
-1. Define Pydantic schemas in `app/schemas/`
-2. Implement core logic in `app/core/`
-3. Create API routes in `app/api/routes/`
-4. Add database models/CRUD if needed
-5. Update documentation
-
-## Authentication
-
-The API uses token-based authentication. Include the token in requests:
-
-```bash
-# Header format
-Authorization: Bearer YOUR_JWT_TOKEN
-```
- ----
-# TODO
-
-- [ ] naive RAG
-- [ ] observability
-- [ ] metadata filtering for topic , security constraints
-- [ ] multi-hop retrieval
-- [ ] reranking
-- [ ] different chunking strategies
-- [ ] evaluation 
-- [ ] dense vs sparse retrieval
-- [ ] build KG from article entities
-- [ ] build chatbot on top of a topic : query to arxiv , retieve papers , build KG, ask questions , generate answer based on abstracts and build KG 
+- [x] Naive RAG Implementation
+- [x] Observability Integration (Phoenix)
+- [ ] Topic-based Metadata Filtering
+- [ ] Multi-hop Retrieval & Reranking
+- [ ] Automated Knowledge Graph Construction
+- [ ] Comprehensive RAG Evaluation Framework
