@@ -15,9 +15,11 @@
     ],
     "env": {
       "PG_DB_HOST": "localhost",
-      "CHROMA_HOST": "localhost" ,
+      "CHROMA_DB_HOST": "localhost" ,
       "PG_DB_PORT":"5433",
-      "CHROMA_DB_PORT": "8001"
+      "CHROMA_DB_PORT": "8001",
+      "COLLECTOR_ENDPOINT": "http://localhost:6006/v1/traces"
+
     },
     "jinja": true
 }

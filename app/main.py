@@ -85,4 +85,4 @@ def init_tracing_with_timeout(timeout: int = 2) -> None:
     if not done:
         print("Phoenix server not reachable → skipping tracing (timed out).")
 
-# init_tracing_with_timeout()
+init_tracing_with_timeout()

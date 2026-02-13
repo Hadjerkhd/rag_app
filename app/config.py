@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: SecretStr = SecretStr("willNotWork")
 
     CHROMA_DB_HOST: str = "chroma"
-    CHROMA_DB_PORT: int = 8000
+    CHROMA_DB_PORT: int = 8001
     
     
     PG_DB_HOST: str = "postgres_db"
