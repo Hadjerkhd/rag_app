@@ -2,6 +2,11 @@ version: "3.9"
 
 services:
 
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"  # UI and OTLP HTTP collector
+
   chroma:
     image: chromadb/chroma:latest
     container_name: chromadb
@@ -14,8 +19,7 @@ services:
       IS_PERSISTENT: "TRUE"
       CHROMA_SERVER_HOST: "0.0.0.0"
       CHROMA_SERVER_HTTP_PORT: "8000"
-    networks:
-      - app-network  
+
 
   postgres_db:
     image: postgres:16
@@ -29,8 +33,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
-    networks:
-      - app-network  
+
 
   api:
     build:
@@ -50,20 +53,14 @@ services:
     depends_on:
       - chroma
       - postgres_db
-    networks:
-      - app-network
+
   ui:
     build:
       context: ./ui
     ports:
       - "8501:8501"
-    networks:
-      - app-network
+
 
 volumes:
   chroma-data:
   postgres_data:
-
-networks:
-  app-network:
- 

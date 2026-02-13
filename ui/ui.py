@@ -2,8 +2,9 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
+import time
 
-API_URL = "http://localhost:8000"
+API_URL = "http://api:8000"
 FETCH_ARTICLES_URL = "/fetch-arxiv-articles"
 GET_DB_ARTICLES_URL = "/get-db-arxiv-articles"
 CHAT_URL = "/chat"  # Add your RAG chat endpoint
@@ -157,16 +158,16 @@ def display_article_card(article, index):
         
         col1, col2, col3 = st.columns([1, 1, 4])
         with col1:
-            if st.button("📄 View", key=f"view_{index}"):
-                st.session_state[f"expanded_{index}"] = True
+            if st.button("📄 View", key=f"view_{index}_{str(time.time())}"):
+                st.session_state[f"expanded_{index}_{str(time.time())}"] = True
         with col2:
             if article.get('pdf_url'):
                 st.link_button("📥 PDF", article['pdf_url'])
         
-        if st.session_state.get(f"expanded_{index}", False):
+        if st.session_state.get(f"expanded_{index}_{str(time.time())}", False):
             st.markdown(f"**Full Summary:**\n\n{article.get('summary', 'No summary available')}")
-            if st.button("Hide", key=f"hide_{index}"):
-                st.session_state[f"expanded_{index}"] = False
+            if st.button("Hide", key=f"hide_{index}_{str(time.time())}"):
+                st.session_state[f"expanded_{index}_{str(time.time())}"] = False
 
 def main():
     # Header
@@ -200,9 +201,63 @@ def main():
         st.caption("💡 Tip: Use the Chat tab to ask questions about the articles")
     
     # Main content tabs
-    tab1, tab2, tab3 = st.tabs(["💬 Chat Assistant", "📋 Article Library", "🔍 Search Results"])
+    tab3, tab2, tab1 = st.tabs(["🔍 1. Search Results","📋 2. Explore Articles",  "💬 3. Chat Assistant", ])
     
-    # Tab 1: Chat Interface
+    # Tab 3: Search Results
+    with tab3:
+        st.header("Search Results")
+        
+        if st.session_state.search_results is None:
+            st.info("👈 Use the sidebar to search for articles")
+        elif len(st.session_state.search_results) == 0:
+            st.warning("No search results found")
+        else:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"**{len(st.session_state.search_results)} results found**")
+            with col2:
+                pass
+            
+            # Display search results
+            for idx, article in enumerate(st.session_state.search_results, 1):
+                display_article_card(article, idx)
+      
+    # Tab 2: Database Articles
+    with tab2:
+        st.header("Article Library")
+        st.markdown("Browse all articles stored in the database")
+        
+        if st.session_state.db_articles is None:
+            st.info("👈 Click 'Refresh Database' in the sidebar to load articles")
+        elif len(st.session_state.db_articles) == 0:
+            st.warning("No articles found in database")
+        else:
+            # Filter options
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                filter_text = st.text_input("Filter by title or author:", 
+                                           placeholder="Type to filter...")
+            with col2:
+                st.metric("Total Articles", len(st.session_state.db_articles))
+            
+            # Filter articles
+            filtered_articles = st.session_state.db_articles
+            if filter_text:
+                filtered_articles = [
+                    a for a in st.session_state.db_articles 
+                    if filter_text.lower() in a.get('title', '').lower() or
+                       any(filter_text.lower() in author.lower() 
+                           for author in a.get('authors', []))
+                ]
+            
+            st.markdown(f"Showing {len(filtered_articles)} articles")
+            
+            # Display articles
+            for idx, article in enumerate(filtered_articles, 1):
+                display_article_card(article, idx)
+    
+
+  # Tab 1: Chat Interface
     with tab1:
         st.header("Ask Questions About Articles")
         st.markdown("Chat with an AI assistant that can answer questions based on the article database.")
@@ -250,60 +305,6 @@ def main():
         if st.button("🗑️ Clear Chat History"):
             st.session_state.chat_history = []
             st.rerun()
-    
-    # Tab 2: Database Articles
-    with tab2:
-        st.header("Article Library")
-        st.markdown("Browse all articles stored in the database")
-        
-        if st.session_state.db_articles is None:
-            st.info("👈 Click 'Refresh Database' in the sidebar to load articles")
-        elif len(st.session_state.db_articles) == 0:
-            st.warning("No articles found in database")
-        else:
-            # Filter options
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                filter_text = st.text_input("Filter by title or author:", 
-                                           placeholder="Type to filter...")
-            with col2:
-                st.metric("Total Articles", len(st.session_state.db_articles))
-            
-            # Filter articles
-            filtered_articles = st.session_state.db_articles
-            if filter_text:
-                filtered_articles = [
-                    a for a in st.session_state.db_articles 
-                    if filter_text.lower() in a.get('title', '').lower() or
-                       any(filter_text.lower() in author.lower() 
-                           for author in a.get('authors', []))
-                ]
-            
-            st.markdown(f"Showing {len(filtered_articles)} articles")
-            
-            # Display articles
-            for idx, article in enumerate(filtered_articles, 1):
-                display_article_card(article, idx)
-    
-    # Tab 3: Search Results
-    with tab3:
-        st.header("Search Results")
-        
-        if st.session_state.search_results is None:
-            st.info("👈 Use the sidebar to search for articles")
-        elif len(st.session_state.search_results) == 0:
-            st.warning("No search results found")
-        else:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"**{len(st.session_state.search_results)} results found**")
-            with col2:
-                if st.button("Save to Database"):
-                    st.success("Articles saved! (Implement save endpoint)")
-            
-            # Display search results
-            for idx, article in enumerate(st.session_state.search_results, 1):
-                display_article_card(article, idx)
-
+  
 if __name__ == "__main__":
     main()

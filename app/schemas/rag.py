@@ -5,8 +5,8 @@ import json
 
 class AnswerToQuestion(BaseModel):
     answer: str
-    relevant_context: str
-    confidence: Literal["low", "medium", "high"]
+    relevant_context: str | None = None
+    confidence: Literal["low", "medium", "high"] | None = None
     
 class QuestionForDocs(BaseModel):
     question: str

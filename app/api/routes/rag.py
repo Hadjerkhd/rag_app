@@ -5,31 +5,16 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi import UploadFile
 from app.schemas.rag import AnswerToQuestion, QuestionForDocs, _parse_final_answer
-from app.core.rag import retreive_context, index_document
+from app.core.rag import retreive_context, index_document, retreive_arxiv_context
+from app.core.vector_db import load_vector_store
 from app.config import settings
 
 from PyPDF2 import PdfReader
-from langchain_chroma import Chroma
-from langchain_community.embeddings.sentence_transformer import (
-    SentenceTransformerEmbeddings,
-)
+
 from langchain_openai import ChatOpenAI
 
 
 router = APIRouter()
-
-def load_embeddings_model():
-    logger.debug('Loading embeddin model')
-    return SentenceTransformerEmbeddings(
-        model_name="all-MiniLM-L6-v2"
-        )
-def load_vector_store():
-    embedder = load_embeddings_model()
-    logger.debug("Loading Chroma vector store. This may take a while. Please wait. ")
-    return Chroma(host=settings.CHROMA_DB_HOST, port=settings.CHROMA_DB_PORT,
-    collection_name="demo",
-    embedding_function=embedder,
-)
 
 llm = ChatOpenAI(
         # base_url=settings.OPENAI_API_BASE,
@@ -55,9 +40,9 @@ def extract_text_from_file(file: UploadFile) -> str | None:
         raise ValueError("None existing file")
     return None
 
-def get_system_prompt(question: str, context: str) -> str:
+def get_system_prompt(question: str, context: str,file_name:str="answer.txt") -> str:
     """Load and format the system prompt from file."""
-    prompt_path = Path(__file__).parent.parent.parent / "prompts" / "answer.txt"
+    prompt_path = Path(__file__).parent.parent.parent / "prompts" / file_name
     prompt_template = prompt_path.read_text(encoding="utf-8")
     return prompt_template.format(question=question, context=context)
 
@@ -78,9 +63,31 @@ def api_answer_question(
     joint_context, retreived_docs = asyncio.run(retreive_context(body.question,vector_store=vector_store))
     logger.debug(f"Retreived similar context to the question {joint_context}. \n Now, asking LLM to formulate the answer from this context")
     prompt = get_system_prompt(context=joint_context, question=body.question)
-    answer = _parse_final_answer(llm.invoke(prompt).text())
+    llm_resposne=llm.invoke(prompt).text()
+    answer = _parse_final_answer(llm_resposne)
     return answer
 
+
+@router.post(
+    "/answer-research-question",
+    response_model=AnswerToQuestion,
+    tags=["rag"],
+    responses={500: {"description": "Internal server error"}, 400: {"description": "Bad request"}},
+)
+def api_answer_research_question(
+    body: QuestionForDocs,
+) -> AnswerToQuestion:
+    
+    vector_store = load_vector_store()
+    logger.debug(f"Vector store loaded! \n Now going to retreive context for the question: {body.question}")
+    joint_context, retreived_docs = asyncio.run(retreive_arxiv_context(body.question,vector_store=vector_store))
+    logger.debug(f"Retreived similar context to the question {joint_context}. \n Now, asking LLM to formulate the answer from this context")
+    prompt = get_system_prompt(context=joint_context, question=body.question,file_name='researcher.txt')
+    llm_response=llm.invoke(prompt).text()
+    logger.debug(f"LLM response {llm_response}.")
+    answer: AnswerToQuestion = AnswerToQuestion(answer = llm_response)
+
+    return answer
 
 @router.post(
     "/index-doc",

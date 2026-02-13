@@ -153,4 +153,16 @@ The API uses token-based authentication. Include the token in requests:
 # Header format
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
+ ----
+# TODO
 
+- [ ] naive RAG
+- [ ] observability
+- [ ] metadata filtering for topic , security constraints
+- [ ] multi-hop retrieval
+- [ ] reranking
+- [ ] different chunking strategies
+- [ ] evaluation 
+- [ ] dense vs sparse retrieval
+- [ ] build KG from article entities
+- [ ] build chatbot on top of a topic : query to arxiv , retieve papers , build KG, ask questions , generate answer based on abstracts and build KG 

@@ -29,6 +29,11 @@ dependencies = [
     "uvicorn>=0.35.0",
     "loguru>=0.7.3",
     "gliner2>=1.0.2",
+    "openinference-instrumentation-langchain>=0.1.56",
+    "arize-phoenix>=12.20.0",
+    "arize-phoenix-client>=1.26.0",
+    "arize-phoenix-evals>=2",
+    "arize-phoenix-otel>=0.14.0",
 ]
 
 [dependency-groups]

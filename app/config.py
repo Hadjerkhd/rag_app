@@ -20,4 +20,9 @@ class Settings(BaseSettings):
     PG_DB_USER_NAME: str = "appuser"
     PG_password: str  = "apppassword"
     
+    CHUNKS_SIZE: int =1000
+    TOP_K_RETRIEVE: int = 5
+    
+    COLLECTOR_ENDPOINT: str = "http://phoenix:6006/v1/traces"
+    OTEL_BSP_SCHEDULE_DELAY_MS: int = 10000
 settings = Settings()
