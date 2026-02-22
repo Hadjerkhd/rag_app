@@ -7,6 +7,7 @@ import time
 API_URL = "http://api:8000"
 FETCH_ARTICLES_URL = "/fetch-arxiv-articles"
 GET_DB_ARTICLES_URL = "/get-db-arxiv-articles"
+ANSWER_QUESTION_URL = "/answer-research-question"
 CHAT_URL = "/chat"  # Add your RAG chat endpoint
 
 # Page configuration
@@ -90,7 +91,7 @@ if 'search_results' not in st.session_state:
     st.session_state.search_results = None
 
 def fetch_articles(keyword, max_articles):
-    """Fetch articles from arXiv"""
+    """Fetch articles from arXiv, store into pg and index into chroma"""
     try:
         response = requests.post(
             url=f"{API_URL}{FETCH_ARTICLES_URL}",
@@ -123,22 +124,6 @@ def get_db_articles():
     except Exception as e:
         st.error(f"Error getting database articles: {str(e)}")
         return []
-
-def send_chat_message(message):
-    """Send message to RAG chat endpoint"""
-    try:
-        response = requests.post(
-            url=f"{API_URL}{CHAT_URL}",
-            headers={"Content-Type": "application/json"},
-            json={"message": message},
-            timeout=30
-        )
-        if response.status_code == 200:
-            return response.json().get("response", "No response received")
-        else:
-            return f"Error: Unable to get response (Status: {response.status_code})"
-    except Exception as e:
-        return f"Error: {str(e)}"
 
 def display_article_card(article, index):
     """Display a single article in card format"""
@@ -263,44 +248,39 @@ def main():
         st.markdown("Chat with an AI assistant that can answer questions based on the article database.")
         
         # Chat container
-        chat_container = st.container()
-        with chat_container:
-            # Display chat history
-            for i, chat in enumerate(st.session_state.chat_history):
-                if chat['role'] == 'user':
-                    st.markdown(f'<div class="user-message"><strong>You:</strong><br>{chat["content"]}</div>', 
-                              unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<div class="assistant-message"><strong>Assistant:</strong><br>{chat["content"]}</div>', 
-                              unsafe_allow_html=True)
+        for chat in st.session_state.chat_history:
+            with st.chat_message(chat['role']):
+                st.markdown(chat['content'])
         
         # Chat input
-        with st.container():
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                user_input = st.text_input("Your question:", 
-                                          placeholder="e.g., What are the latest advances in transformers?",
-                                          key="chat_input",
-                                          label_visibility="collapsed")
-            with col2:
-                send_button = st.button("Send", use_container_width=True)
-        
-        if send_button and user_input:
+        if user_input := st.chat_input("Ask a question about the papers..."):
             # Add user message
-            st.session_state.chat_history.append({
-                'role': 'user',
-                'content': user_input
-            })
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            with st.chat_message("user"):
+                st.markdown(user_input)
             
             # Get AI response
-            with st.spinner("Thinking..."):
-                response = send_chat_message(user_input)
-                st.session_state.chat_history.append({
-                    'role': 'assistant',
-                    'content': response
-                })
-            
-            st.rerun()
+            with st.chat_message("assistant"):
+                try:
+                    def stream_generator():
+                        with requests.post(
+                            url=f"{API_URL}{ANSWER_QUESTION_URL}",
+                            headers={"Content-Type": "application/json"},
+                            json={"question": user_input},
+                            stream=True,
+                            timeout=60
+                        ) as r:
+                            r.raise_for_status()
+                            for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
+                                if chunk:
+                                    yield chunk
+
+                    full_response = st.write_stream(stream_generator())
+                    st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                except Exception as e:
+                    error_msg = f"Error: {str(e)}"
+                    st.error(error_msg)
+                    st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
         
         if st.button("🗑️ Clear Chat History"):
             st.session_state.chat_history = []

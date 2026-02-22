@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 from pathlib import Path
-from fastapi import APIRouter
-from fastapi import UploadFile
+from fastapi import APIRouter, UploadFile
+from fastapi.responses import StreamingResponse
 from app.schemas.rag import AnswerToQuestion, QuestionForDocs, _parse_final_answer
 from app.core.rag import retreive_context, index_document, retreive_arxiv_context
 from app.core.vector_db import load_vector_store
@@ -21,8 +21,18 @@ llm = ChatOpenAI(
         api_key=settings.OPENAI_API_KEY,
         model=settings.OPENAI_MODEL,
         temperature=0.5,
-        disable_streaming=True,
+        streaming=True
     )
+# Global variable to cache the vector store
+_vector_store = None
+
+def get_vector_store():
+    """Lazy loader for the vector store to prevent startup race conditions."""
+    global _vector_store
+    if _vector_store is None:
+        _vector_store = load_vector_store()
+    return _vector_store
+
 # --------- Helpers ---------
 
 def extract_text_from_file(file: UploadFile) -> str | None:
@@ -53,57 +63,62 @@ def get_system_prompt(question: str, context: str,file_name:str="answer.txt") ->
     tags=["rag"],
     responses={500: {"description": "Internal server error"}, 400: {"description": "Bad request"}},
 )
-def api_answer_question(
+async def api_answer_question(
     body: QuestionForDocs,
 ) -> AnswerToQuestion:
     answer: AnswerToQuestion
-    
-    vector_store = load_vector_store()
-    logger.debug(f"Vector store loaded! \n Now going to retreive context for the question: {body.question}")
-    joint_context, retreived_docs = asyncio.run(retreive_context(body.question,vector_store=vector_store))
+
+    logger.debug(f"Now going to retreive context for the question: {body.question}")
+    joint_context, retreived_docs = await retreive_context(body.question,vector_store=get_vector_store())
     logger.debug(f"Retreived similar context to the question {joint_context}. \n Now, asking LLM to formulate the answer from this context")
     prompt = get_system_prompt(context=joint_context, question=body.question)
-    llm_resposne=llm.invoke(prompt).text()
+    response = await llm.ainvoke(prompt)
+    llm_resposne = response.content
     answer = _parse_final_answer(llm_resposne)
     return answer
 
 
 @router.post(
     "/answer-research-question",
-    response_model=AnswerToQuestion,
     tags=["rag"],
     responses={500: {"description": "Internal server error"}, 400: {"description": "Bad request"}},
 )
-def api_answer_research_question(
+async def api_answer_research_question(
     body: QuestionForDocs,
-) -> AnswerToQuestion:
+) -> StreamingResponse:
     
-    vector_store = load_vector_store()
-    logger.debug(f"Vector store loaded! \n Now going to retreive context for the question: {body.question}")
-    joint_context, retreived_docs = asyncio.run(retreive_arxiv_context(body.question,vector_store=vector_store))
-    logger.debug(f"Retreived similar context to the question {joint_context}. \n Now, asking LLM to formulate the answer from this context")
-    prompt = get_system_prompt(context=joint_context, question=body.question,file_name='researcher.txt')
-    llm_response=llm.invoke(prompt).text()
-    logger.debug(f"LLM response {llm_response}.")
-    answer: AnswerToQuestion = AnswerToQuestion(answer = llm_response)
+    async def stream_response():
+        yield "🔍 Retrieving context from Arxiv...\n\n"
+        logger.debug(f"Vector store loaded! \n Now going to retreive context for the question: {body.question}")
+        
+        joint_context, retreived_docs = await retreive_arxiv_context(body.question, vector_store=get_vector_store())
+        
+        yield "🧠 Asking LLM to formulate the answer...\n\n"
+        logger.debug(f"Retreived similar context to the question. Now, asking LLM to formulate the answer")
+        
+        prompt = get_system_prompt(context=joint_context, question=body.question, file_name='researcher.txt')
+        
+        async for chunk in llm.astream(prompt):
+            if chunk.content:
+                yield chunk.content
 
-    return answer
+    return StreamingResponse(stream_response(), media_type="text/event-stream")
 
 @router.post(
     "/index-doc",
     tags=["rag"],
     responses={500: {"description": "Internal server error"}, 400: {"description": "Bad request"}},
 )
-def api_index_doc(
+async def api_index_doc(
     file: UploadFile
 ) -> int:
     try:
-        vector_store = load_vector_store()
         raw_text = extract_text_from_file(file)
-        doc_len = asyncio.run(index_document(str(raw_text),vector_store))
+        doc_len = await index_document(str(raw_text), get_vector_store())
         if doc_len:
             return doc_len
         else:
             raise Exception("Error while indexing document")
-    except Exception:
+    except Exception as e:
+        logger.error(f"Indexing error: {e}")
         raise Exception("Error while indexing document")

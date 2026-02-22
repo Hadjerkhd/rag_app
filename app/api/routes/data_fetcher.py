@@ -8,10 +8,6 @@ from app.utils.db import init_db
 from app.core.vector_db import load_vector_store
 
 router = APIRouter()
-
-init_db()
-chroma = load_vector_store()
-
 @router.post(
     "/fetch-arxiv-articles",
     response_model=FetchArxivArticleResponse,
@@ -21,7 +17,8 @@ chroma = load_vector_store()
 def api_fetch_arxiv_articles(
     body: FetchArxivArticleRequest,
 ) -> FetchArxivArticleResponse:
-    
+    init_db()
+    chroma = load_vector_store()
     fetched_articles: FetchArxivArticleResponse = asyncio.run(fetch_articles_by_query(body.query, body.max_results, body.sort_criterion))
     asyncio.run(store_articles_into_db(fetched_articles.fetched_articles))
     asyncio.run(index_arxiv_articles(fetched_articles.fetched_articles,query=body.query,vectore_store=chroma))
@@ -35,7 +32,7 @@ def api_fetch_arxiv_articles(
 )
 def api_get_stored_arxiv_articles(
 ) -> list[ArticleInDB]:
-   
+    init_db()
     result = asyncio.run(get_articles_from_db())
 
     return result
